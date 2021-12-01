@@ -1,50 +1,42 @@
 const fs = require('fs')
 const rawData = fs.readFileSync(__dirname + '/data.txt', {encoding: 'utf-8'})
-const data = rawData.trim().split(/\n{1}/)
+const data = rawData
+  .trim()
+  .split(/\n/)
+  .map((n) => Number(n));
 
-function findSeat(seatDescription = []) {
-  return seatDescription.map((code) => {
-    let rowMax = 127
-    let rowMin = 0
-    let colMax = 7
-    let colMin = 0
-    code.split('').forEach(dir => {
-      switch(dir) {
-        case 'F':
-          rowMax = rowMin + Math.floor((rowMax - rowMin) / 2)
-          break;
-        case 'B':
-          rowMin = rowMin + Math.ceil((rowMax - rowMin) / 2)
-          break;
-        case 'L':
-          colMax = colMin + Math.floor((colMax - colMin) / 2)
-          break;
-        case 'R':
-          colMin = colMin + Math.ceil((colMax - colMin) / 2)
-          break;
-      }
-    })
+// 1.1
 
-    return rowMin * 8 + colMin
-  })
+function scanDepths(sonarData = []) {
+  let count = 0;
+  let prev;
+  sonarData.forEach((depth) => {
+    if (prev && depth > prev) {
+      count++;
+    }
+    prev = depth;
+  });
+  return count;
 }
 
-const seatUIDs = findSeat(data)
+console.log(`depth increased ${scanDepths(data)} times.`);
 
-console.log(`Highest Seat UID is: ${Math.max(...seatUIDs)}`)
+// 1.2
 
-const sortedUIDs = seatUIDs.sort((a, b) => {
-  if(a < b) {
-    return -1
-  }
-  if(a > b) {
-    return 1
-  }
-})
+function scanDepthTriplets(sonarData = []) {
+  let count = 0;
+  let prev;
+  sonarData.forEach((depth, index, array) => {
+    const cur =
+      array.slice(index, index + 3).length === 3
+        ? array.slice(index, index + 3).reduce((p, c) => p + c)
+        : null;
+    if (prev && cur && cur > prev) {
+      count++;
+    }
+    prev = cur;
+  });
+  return count;
+}
 
-console.log(`Your Seat UID is: ${sortedUIDs.reduce((acc, cur) => {
-  if(acc + 1 === cur) {
-    return cur
-  }
-  return acc
-}) + 1}`)
+console.log(`triplet depth increased ${scanDepthTriplets(data)} times.`);
